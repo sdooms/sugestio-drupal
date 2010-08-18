@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * Implementation of hook_install().
+ */
+function sugestio_install() {
+  drupal_install_schema('sugestio');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function sugestio_uninstall() {
+  drupal_uninstall_schema('sugestio');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function sugestio_schema() {
+  $schema = array();
+
+  $schema['cache_sugestio_calls'] = sugestio_get_calls_structure();
+
+  //Recommendations cache.
+  $schema['cache_sugestio'] = drupal_get_schema_unprocessed('system', 'cache');
+	
+  return $schema;
+}
+
+/**
+ * Returns the database structure for the storage
+ * of the hook events that should be cached and executed
+ * when cron is run. 
+ */
+function sugestio_get_calls_structure() {
+  //Hook calls to external Sugestio recommendation engine cache.
+  $calls = array(
+    'fields' => array(
+	  'cid' => array(
+	    'type' => 'serial',
+		'unsigned' => TRUE,
+		'not null' => TRUE),
+	  'data' => array(
+	    'type' => 'blob',
+        'serialize' => TRUE,
+		'not null' => TRUE),
+	  'event' => array(
+	    'type' => 'text',
+		'not null' => TRUE),
+	),
+	'primary key' => array('cid'),
+	'indexes' => array(
+	  'event' => array(array('event',5)),),
+	);
+	return $calls;
+}
+
+/**
+ * Implementation of hook_flush_caches().
+ *
+ * This tells Drupal's cache handling system the name of our caching 
+ * table, so expired items will be purged automatically and this table 
+ * also affected by the empty all caches function.
+ */
+function sugestio_flush_caches() {
+  return array('cache_sugestio');
+}
